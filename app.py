@@ -1,40 +1,57 @@
-from flask import Flask, render_template, request, jsonify
 from pymongo import MongoClient
+from getpass import getpass
 
-app = Flask(__name__,)
-client = MongoClient('mongodb://localhost:27017/')
-db = client['phonicly_db']
-users_collection = db['users']
+# Connect to MongoDB
+client = MongoClient("mongodb://localhost:27017/")
+db = client["mydatabase"]
+users = db["users"]
 
-# Routes
-@app.route('/')
-def home():
-    return render_template('home.html')
+def signup():
+   
+    username = input("Enter a username: ")
+    email = input("Enter your email address: ")
+    password = getpass("Enter a password: ")
 
-@app.route('/login', methods=['GET', 'POST'])
+    if users.find_one({"username": username}):
+        print("Username already exists!")
+        return
+
+    user = {
+        "username": username,
+        "email": email,
+        "password": password
+    }
+
+    users.insert_one(user)
+    print("User created successfully!")
+
 def login():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        user = users_collection.find_one({'email': email, 'password': password})
-        if user:
-            return render_template('home.html', message='Login successful!')
+    username = input("Enter your username: ")
+    password = getpass("Enter your password: ")
+
+    user = users.find_one({"username": username, "password": password})
+
+    if user:
+        print("Login successful!")
+    else:
+        print("Invalid username or password.")
+
+def main():
+    while True:
+        print("\n1. Signup")
+        print("2. Login")
+        print("3. Exit")
+
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            signup()
+        elif choice == "2":
+            login()
+        elif choice == "3":
+            break
         else:
-            return render_template('login.html', error='Invalid email or password')
-    return render_template('login.html')
+            print("Invalid choice. Please try again.")
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-        if users_collection.find_one({'email': email}):
-            return render_template('signup.html', error='Email already exists')
-        user_data = {'username': username, 'email': email, 'password': password}
-        users_collection.insert_one(user_data)
-        return render_template('login.html', message='User registered successfully!')
-    return render_template('signup.html')
-
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    main()
