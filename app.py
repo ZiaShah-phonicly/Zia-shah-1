@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from pymongo import MongoClient
 
-app = Flask(__name__,')
+app = Flask(__name__,)
 client = MongoClient('mongodb://localhost:27017/')
 db = client['phonicly_db']
 users_collection = db['users']
